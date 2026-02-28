@@ -53,8 +53,8 @@
             margin: 0;
             padding: 0;
             height: 100vh;
-            height: 100dvh; /* Dynamic Viewport Height */
-            overflow: hidden; /* Prevent body scroll */
+            height: 100dvh;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             transition: background-color 0.3s ease;
@@ -69,7 +69,7 @@
             padding: 12px 20px;
             padding-top: max(12px, env(safe-area-inset-top));
             background: var(--bg-color);
-            z-index: 10;
+            z-index: 30; /* Ensure header is on top */
         }
         h1 { font-size: 18px; margin: 0; font-weight: 700; }
         .theme-toggle {
@@ -95,6 +95,7 @@
             align-items: center;
             padding: 20px;
             transition: opacity 0.3s ease;
+            z-index: 10;
         }
         .upload-area {
             width: 100%;
@@ -120,6 +121,8 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s ease;
+            z-index: 20;
+            background: var(--bg-color);
         }
         #editorView.visible { opacity: 1; pointer-events: auto; }
 
@@ -129,7 +132,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background: var(--bg-color); /* Matches body */
+            background: var(--bg-color);
             padding: 20px;
             overflow: hidden;
             position: relative;
@@ -146,16 +149,18 @@
             top: 10px;
             background: rgba(0,0,0,0.6);
             backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             color: white;
             padding: 6px 12px;
             border-radius: 20px;
             font-size: 12px;
             font-weight: 500;
+            pointer-events: none;
         }
 
         /* Controls Sheet (Bottom) */
         .controls-sheet {
-            flex: 0 0 auto; /* Don't grow, size by content */
+            flex: 0 0 auto;
             background: var(--sheet-bg);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
@@ -166,8 +171,8 @@
             display: flex;
             flex-direction: column;
             gap: 16px;
-            max-height: 70%; /* Occupy max 70% of screen */
-            overflow-y: auto; /* Scroll internally if content is too tall */
+            max-height: 70%;
+            overflow-y: auto;
             border-top: 1px solid var(--border-color);
         }
 
@@ -197,13 +202,14 @@
         .checkbox-wrapper {
             display: flex; align-items: center; gap: 8px;
             font-size: 14px; color: var(--text-color); cursor: pointer;
+            width: fit-content;
         }
-        input[type="checkbox"] { accent-color: var(--accent-color); width: 18px; height: 18px; }
+        input[type="checkbox"] { accent-color: var(--accent-color); width: 18px; height: 18px; margin: 0; }
 
         /* Presets */
         .presets-container {
             display: flex; gap: 8px; overflow-x: auto; 
-            padding-bottom: 4px; /* Scrollbar space */
+            padding-bottom: 4px;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
         }
@@ -218,12 +224,13 @@
             white-space: nowrap;
             flex-shrink: 0;
             cursor: pointer;
+            transition: opacity 0.2s;
         }
         .preset-btn.disabled { opacity: 0.3; pointer-events: none; }
         .preset-btn:active { background: var(--border-color); }
 
         /* Estimate */
-        .estimate { text-align: center; font-size: 12px; color: var(--secondary-text); margin-top: -4px; }
+        .estimate { text-align: right; font-size: 12px; color: var(--secondary-text); margin-top: -4px; width: 100%; }
 
         /* Buttons */
         .action-btn {
@@ -240,8 +247,10 @@
             justify-content: center;
             align-items: center;
             gap: 8px;
+            transition: opacity 0.2s;
         }
         .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .action-btn:active { opacity: 0.8; }
         
         .reset-btn {
             background: transparent;
@@ -262,6 +271,8 @@
             padding: 10px;
             font-size: 14px;
             color: var(--text-color);
+            appearance: none;
+            -webkit-appearance: none;
         }
 
         /* Spinner & Toast */
@@ -316,14 +327,14 @@
                 <div class="col">
                     <label class="label">横幅 (Width)</label>
                     <div class="input-group">
-                        <input type="number" id="widthInput">
+                        <input type="number" id="widthInput" placeholder="0">
                         <span class="unit">px</span>
                     </div>
                 </div>
                 <div class="col">
                     <label class="label">高さ (Height)</label>
                     <div class="input-group">
-                        <input type="number" id="heightInput">
+                        <input type="number" id="heightInput" placeholder="0">
                         <span class="unit">px</span>
                     </div>
                 </div>
@@ -430,8 +441,11 @@
 
     // --- File Input ---
     dropZone.addEventListener('click', () => fileInput.click());
+    
+    // 修正: ここにあった構文エラーを修正しました
     dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('active'); });
-    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('active'););
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('active'));
+    
     dropZone.addEventListener('drop', (e) => {
         e.preventDefault(); dropZone.classList.remove('active');
         if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
@@ -452,6 +466,7 @@
                 const convertedFile = new File([blob], file.name.replace(/\.(heic|heif)$/i, ".jpg"), { type: "image/jpeg" });
                 loadFile(convertedFile);
             } catch (e) {
+                console.error(e);
                 showToast("HEIC読み込み失敗");
             }
             return;
@@ -484,7 +499,7 @@
                 heightInput.value = originalH;
                 
                 updatePresetsState();
-                updateEstimate();
+                validate(); // 初期検証を実行
 
                 // Switch View
                 uploadView.style.display = 'none';
@@ -520,7 +535,7 @@
     });
 
     aspectRatioCheck.addEventListener('change', () => {
-        if (aspectRatioCheck.checked) {
+        if (aspectRatioCheck.checked && widthInput.value) {
             // Re-align height to current width
             heightInput.value = Math.round(widthInput.value / aspectRatio);
             validate();
@@ -585,10 +600,7 @@
             return;
         }
         
-        // Rough estimation
-        // JPEG/WebP ~ 0.2 to 0.8 bytes per pixel depending on quality (assuming high quality here)
-        // PNG ~ 2-3 bytes per pixel if complex, less if simple.
-        let factor = 0.5; 
+        let factor = 0.5; // Default for JPEG high quality
         if (formatSelect.value === 'image/png') factor = 2.0;
         else if (formatSelect.value === 'image/webp') factor = 0.4;
         
@@ -599,6 +611,7 @@
     // --- Reset ---
     resetBtn.addEventListener('click', () => {
         editorView.classList.remove('visible');
+        // Wait for transition before showing upload view
         setTimeout(() => {
             uploadView.style.display = 'flex';
             fileInput.value = '';
@@ -616,54 +629,60 @@
             const h = parseInt(heightInput.value);
             const format = formatSelect.value;
             
-            const canvas = document.createElement('canvas');
-            canvas.width = w;
-            canvas.height = h;
-            const ctx = canvas.getContext('2d');
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-            ctx.drawImage(originalImage, 0, 0, w, h);
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = w;
+                canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                ctx.drawImage(originalImage, 0, 0, w, h);
 
-            canvas.toBlob(async (blob) => {
-                if (!blob) {
-                    showToast("エラー発生");
-                    setLoading(false);
-                    return;
-                }
-
-                // Filename Generation: name_WxH.ext
-                const extMap = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
-                const outExt = extMap[format];
-                const originalBase = originalFile.name.substring(0, originalFile.name.lastIndexOf('.')) || originalFile.name;
-                const fileName = `${originalBase}_${w}x${h}.${outExt}`;
-                
-                const file = new File([blob], fileName, { type: format });
-
-                if (isMobile && navigator.share && navigator.canShare({ files: [file] })) {
-                    // Mobile: Share Sheet
-                    try {
-                        await navigator.share({
-                            files: [file],
-                            title: 'リサイズ画像',
-                        });
-                    } catch (err) {
-                        // ignore abort
+                canvas.toBlob(async (blob) => {
+                    if (!blob) {
+                        showToast("エラー発生");
+                        setLoading(false);
+                        return;
                     }
-                } else {
-                    // Desktop/Other: Download
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = fileName;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                    showToast("ダウンロードしました");
-                }
-                setLoading(false);
 
-            }, format, 0.92);
+                    // Filename Generation: name_WxH.ext
+                    const extMap = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+                    const outExt = extMap[format];
+                    const originalBase = originalFile.name.substring(0, originalFile.name.lastIndexOf('.')) || originalFile.name;
+                    const fileName = `${originalBase}_${w}x${h}.${outExt}`;
+                    
+                    const file = new File([blob], fileName, { type: format });
+
+                    if (isMobile && navigator.share && navigator.canShare({ files: [file] })) {
+                        // Mobile: Share Sheet
+                        try {
+                            await navigator.share({
+                                files: [file],
+                                title: 'リサイズ画像',
+                            });
+                        } catch (err) {
+                            // ignore abort
+                        }
+                    } else {
+                        // Desktop/Other: Download
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = fileName;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        showToast("ダウンロードしました");
+                    }
+                    setLoading(false);
+
+                }, format, 0.92);
+            } catch (e) {
+                console.error(e);
+                showToast("変換エラー");
+                setLoading(false);
+            }
 
         }, 100);
     });
