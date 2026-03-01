@@ -24,28 +24,25 @@
             /* Light Mode */
             --bg-color: #FFFFFF;
             --surface-color: #FFFFFF;
-            --sheet-bg: rgba(255, 255, 255, 0.98);
+            --sheet-bg: rgba(255, 255, 255, 0.95);
             --text-color: #000000;
             --secondary-text: #8E8E93;
             --accent-color: #007AFF;
             --danger-color: #FF3B30;
             --border-color: #E5E5EA;
-            --input-bg: #F5F5F7;
+            --input-bg: #F2F2F7;
             --input-border: #E5E5EA;
             --active-border: #000000;
             --shadow: 0 4px 20px rgba(0,0,0,0.08);
             --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             --transition-speed: 0.3s;
             --bezier: cubic-bezier(0.25, 1, 0.5, 1);
-            
-            /* Body Background for PC View */
-            --pc-body-bg: #EFEFF4;
         }
 
         [data-theme="dark"] {
             --bg-color: #000000;
             --surface-color: #1C1C1E;
-            --sheet-bg: rgba(28, 28, 30, 0.98);
+            --sheet-bg: rgba(28, 28, 30, 0.95);
             --text-color: #FFFFFF;
             --secondary-text: #98989D;
             --accent-color: #0A84FF;
@@ -55,9 +52,6 @@
             --input-border: #38383A;
             --active-border: #FFFFFF;
             --shadow: 0 -4px 20px rgba(0,0,0,0.4);
-
-            /* Body Background for PC View (修正: 黒すぎないダークグレー) */
-            --pc-body-bg: #2C2C2E;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -81,49 +75,14 @@
             -moz-text-size-adjust: 100%;
         }
 
-        /* --- App Frame (Wrapper) --- */
+        /* --- Main Layout --- */
         #app-frame {
             width: 100%;
             height: 100%;
-            background-color: var(--bg-color);
             position: relative;
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            transition: background-color var(--transition-speed) ease;
-        }
-
-        /* 
-           PC/Tablet Specific Styles 
-        */
-        @media (min-width: 541px) {
-            body {
-                background-color: var(--pc-body-bg);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-
-            #app-frame {
-                /* 
-                   修正: サイズをpx固定に変更。
-                   これによりウィンドウサイズを変えても、アプリ自体の大きさは変わりません。
-                */
-                width: 450px;
-                height: 850px;
-                
-                /* アスペクト比指定は削除し、px指定を優先 */
-                
-                /* はみ出し防止（念のため） */
-                max-width: 100vw;
-                max-height: 100vh;
-                
-                box-shadow: 0 20px 60px rgba(0,0,0,0.25);
-                
-                /* 修正: 角丸を16pxに変更 */
-                border-radius: 16px;
-                border: 1px solid rgba(0,0,0,0.1);
-            }
         }
 
         /* Header */
@@ -144,7 +103,7 @@
             color: var(--text-color); font-size: 18px; padding: 8px;
         }
 
-        /* Views Container */
+        /* Container for Views */
         .main-container {
             position: relative;
             flex: 1;
@@ -159,11 +118,12 @@
             inset: 0;
             transition: opacity 0.4s var(--bezier), transform 0.4s var(--bezier);
             will-change: opacity, transform;
+            display: flex;
+            flex-direction: column;
         }
 
-        /* Upload View Styles */
+        /* Upload View */
         #uploadView {
-            display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
@@ -183,7 +143,7 @@
 
         .upload-area {
             width: 100%;
-            max-width: 100%;
+            max-width: 400px; /* Max width for upload box */
             border: 2px dashed var(--border-color);
             border-radius: 20px;
             padding: 60px 20px;
@@ -200,10 +160,8 @@
         .upload-text { color: var(--secondary-text); font-size: 15px; font-weight: 500; }
         #fileInput { display: none; }
 
-        /* Editor View Styles */
+        /* Editor View */
         #editorView {
-            display: flex;
-            flex-direction: column;
             z-index: 20;
             background: var(--bg-color);
         }
@@ -242,7 +200,7 @@
 
         .file-info-overlay {
             position: absolute;
-            top: 10px;
+            top: 20px;
             background: rgba(0,0,0,0.6);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
@@ -256,7 +214,7 @@
             letter-spacing: 0.5px;
         }
 
-        /* Controls Sheet */
+        /* Controls Sheet (Bottom Panel) */
         .controls-sheet {
             flex: 0 0 auto;
             background: var(--sheet-bg);
@@ -269,9 +227,25 @@
             display: flex;
             flex-direction: column;
             gap: 16px;
-            max-height: 70%;
+            
+            /* Ensure controls are accessible */
+            max-height: 60vh;
             overflow-y: auto;
             border-top: 1px solid var(--border-color);
+            
+            /* Tablet/Desktop Optimization */
+            width: 100%;
+            max-width: 600px; /* Don't stretch too wide on tablets */
+            margin: 0 auto; /* Center it */
+        }
+        
+        /* On larger screens, center the controls sheet nicely */
+        @media (min-width: 600px) {
+            .controls-sheet {
+                border-radius: 24px 24px 0 0; /* Reset side borders */
+                border-left: 1px solid var(--border-color);
+                border-right: 1px solid var(--border-color);
+            }
         }
 
         /* Inputs */
@@ -309,10 +283,7 @@
         .unit { position: absolute; right: 12px; font-size: 12px; color: var(--secondary-text); pointer-events: none; }
 
         /* Custom Select Box */
-        .select-wrapper {
-            position: relative;
-            width: 100%;
-        }
+        .select-wrapper { position: relative; width: 100%; }
         select {
             width: 100%;
             background-color: var(--input-bg);
@@ -374,9 +345,8 @@
             gap: 10px; 
             flex-wrap: wrap;
             justify-content: space-between;
-            /* 修正: パディングを増やして枠切れを防止 */
             padding: 4px;
-            margin: 0 -4px; /* パディング分をネガティブマージンで相殺 */
+            margin: 0 -4px;
             width: calc(100% + 8px);
         }
         
@@ -393,7 +363,7 @@
             transition: all 0.2s;
             flex: 1 1 20%;
             text-align: center;
-            position: relative; /* z-index用 */
+            position: relative;
         }
         .preset-btn.disabled { opacity: 0.3; pointer-events: none; border-style: dashed; }
         .preset-btn.active { 
@@ -401,8 +371,8 @@
             background: var(--bg-color);
             font-weight: 700;
             transform: translateY(-1px);
-            z-index: 1; /* 重なり順を上げる */
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* 少し影をつけて浮かす */
+            z-index: 1;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .preset-btn:active { transform: scale(0.96); }
 
@@ -492,7 +462,6 @@
 </head>
 <body>
 
-<!-- Mobile App Wrapper -->
 <div id="app-frame">
     <header>
         <h1>Resizer</h1>
@@ -509,7 +478,7 @@
             </div>
         </div>
 
-        <!-- Editor View (Overlay) -->
+        <!-- Editor View -->
         <div id="editorView" class="view hidden">
             <div class="preview-area">
                 <img id="previewImage" src="" alt="">
@@ -593,7 +562,6 @@
 
     <div class="toast" id="toast">Message</div>
 </div>
-<!-- End App Wrapper -->
 
 <script>
     // --- Elements ---
@@ -623,15 +591,12 @@
     const modalImage = document.getElementById('modalImage');
     const closeModal = document.getElementById('closeModal');
 
-    // --- Disable Zoom (PC/Shortcuts) ---
-    // Note: This attempts to prevent zooming via keyboard shortcuts.
-    // Browser menu zooming cannot be prevented via JS.
+    // --- Disable Zoom via Keyboard/Mouse ---
     document.addEventListener('keydown', function(e) {
         if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '-' || e.key === '=')) {
             e.preventDefault();
         }
     }, { passive: false });
-
     document.addEventListener('wheel', function(e) {
         if (e.ctrlKey || e.metaKey) {
             e.preventDefault();
@@ -666,7 +631,7 @@
     });
     initTheme();
 
-    // --- View Switching (Animation) ---
+    // --- View Switching ---
     function showEditor() {
         uploadView.classList.remove('active');
         uploadView.classList.add('hidden');
@@ -694,10 +659,8 @@
 
     // --- File Input ---
     dropZone.addEventListener('click', () => fileInput.click());
-    
     dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('hover'); });
     dropZone.addEventListener('dragleave', () => dropZone.classList.remove('hover'));
-    
     dropZone.addEventListener('drop', (e) => {
         e.preventDefault(); dropZone.classList.remove('hover');
         if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
@@ -710,7 +673,6 @@
         const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'image/heic', 'image/heif'];
         const ext = file.name.split('.').pop().toLowerCase();
         
-        // HEIC conversion
         if (ext === 'heic' || ext === 'heif' || file.type === 'image/heic' || file.type === 'image/heif') {
             showToast("HEICを変換中...");
             try {
@@ -742,18 +704,15 @@
                 originalH = originalImage.height;
                 aspectRatio = originalW / originalH;
 
-                // UI Setup
                 previewImage.src = e.target.result;
                 modalImage.src = e.target.result;
                 fileInfoOverlay.textContent = `${originalW}×${originalH} | ${originalSizeStr}`;
                 
-                // Initialize Inputs
                 widthInput.value = originalW;
                 heightInput.value = originalH;
                 
                 updatePresetsState();
                 validate(); 
-
                 showEditor();
             };
             originalImage.src = e.target.result;
@@ -761,7 +720,7 @@
         reader.readAsDataURL(file);
     }
 
-    // --- Format Bytes ---
+    // --- Helpers ---
     function formatBytes(bytes) {
         if (bytes === 0) return '0 B';
         const k = 1024;
@@ -770,7 +729,6 @@
         return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
     }
 
-    // --- Inputs Logic ---
     widthInput.addEventListener('input', () => {
         if (aspectRatioCheck.checked && widthInput.value) {
             heightInput.value = Math.round(widthInput.value / aspectRatio);
@@ -799,7 +757,6 @@
         const h = parseInt(heightInput.value) || 0;
         let hasError = false;
 
-        // Validation
         if (w > originalW) {
             widthInput.classList.add('error');
             hasError = true;
@@ -819,18 +776,12 @@
         updateEstimate(hasError);
     }
 
-    // --- Presets ---
     presetBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             const targetW = parseInt(btn.dataset.w);
-            
-            if (!aspectRatioCheck.checked) {
-                aspectRatioCheck.checked = true;
-            }
-
+            if (!aspectRatioCheck.checked) aspectRatioCheck.checked = true;
             widthInput.value = targetW;
             heightInput.value = Math.round(targetW / aspectRatio);
-            
             validate();
         });
     });
@@ -838,32 +789,24 @@
     function updateActivePreset(currentW) {
         presetBtns.forEach(btn => {
             const w = parseInt(btn.dataset.w);
-            if (w === currentW) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
-            }
+            if (w === currentW) btn.classList.add('active');
+            else btn.classList.remove('active');
         });
     }
 
     function updatePresetsState() {
         presetBtns.forEach(btn => {
             const targetW = parseInt(btn.dataset.w);
-            if (targetW > originalW) {
-                btn.classList.add('disabled');
-            } else {
-                btn.classList.remove('disabled');
-            }
+            if (targetW > originalW) btn.classList.add('disabled');
+            else btn.classList.remove('disabled');
         });
     }
 
-    // --- Estimate Size ---
     function updateEstimate(hasError) {
         if (hasError) {
             estimateSize.textContent = "約 ---.- B";
             return;
         }
-
         const w = parseInt(widthInput.value) || 0;
         const h = parseInt(heightInput.value) || 0;
         if (w <= 0 || h <= 0) {
@@ -880,21 +823,15 @@
         estimateSize.textContent = `約 ${formatBytes(estBytes)}`;
     }
 
-    // --- Modal Logic ---
-    previewImage.addEventListener('click', () => {
-        modal.classList.add('open');
-    });
-    closeModal.addEventListener('click', () => {
-        modal.classList.remove('open');
-    });
+    // --- Modal & Convert ---
+    previewImage.addEventListener('click', () => modal.classList.add('open'));
+    closeModal.addEventListener('click', () => modal.classList.remove('open'));
     modal.addEventListener('click', (e) => {
         if (e.target === modal) modal.classList.remove('open');
     });
 
-    // --- Reset ---
     resetBtn.addEventListener('click', showUpload);
 
-    // --- Convert & Output ---
     convertBtn.addEventListener('click', async () => {
         if (convertBtn.disabled) return;
         setLoading(true);
@@ -919,23 +856,16 @@
                         setLoading(false);
                         return;
                     }
-
                     const extMap = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
                     const outExt = extMap[format];
                     const originalBase = originalFile.name.substring(0, originalFile.name.lastIndexOf('.')) || originalFile.name;
                     const fileName = `${originalBase}_${w}x${h}.${outExt}`;
-                    
                     const file = new File([blob], fileName, { type: format });
 
                     if (isMobile && navigator.share && navigator.canShare({ files: [file] })) {
                         try {
-                            await navigator.share({
-                                files: [file],
-                                title: 'リサイズ画像',
-                            });
-                        } catch (err) {
-                            // ignore abort
-                        }
+                            await navigator.share({ files: [file], title: 'リサイズ画像' });
+                        } catch (err) {}
                     } else {
                         const url = URL.createObjectURL(blob);
                         const a = document.createElement('a');
@@ -948,14 +878,12 @@
                         showToast("ダウンロードしました");
                     }
                     setLoading(false);
-
                 }, format, 0.92);
             } catch (e) {
                 console.error(e);
                 showToast("変換エラー");
                 setLoading(false);
             }
-
         }, 100);
     });
 
