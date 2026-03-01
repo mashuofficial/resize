@@ -56,8 +56,8 @@
             --active-border: #FFFFFF;
             --shadow: 0 -4px 20px rgba(0,0,0,0.4);
 
-            /* Body Background for PC View */
-            --pc-body-bg: #121212;
+            /* Body Background for PC View (修正: 黒すぎないダークグレー) */
+            --pc-body-bg: #2C2C2E;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -74,8 +74,11 @@
             display: flex;
             flex-direction: column;
             transition: background-color var(--transition-speed) ease;
+            
+            /* Prevent text size adjustment */
             text-size-adjust: 100%;
             -webkit-text-size-adjust: 100%;
+            -moz-text-size-adjust: 100%;
         }
 
         /* --- App Frame (Wrapper) --- */
@@ -103,22 +106,23 @@
 
             #app-frame {
                 /* 
-                   アスペクト比を少し横長に調整 (9:17) 
-                   以前より幅広になり、窮屈さが解消されます。
+                   修正: サイズをpx固定に変更。
+                   これによりウィンドウサイズを変えても、アプリ自体の大きさは変わりません。
                 */
-                aspect-ratio: 9 / 17;
-
-                /* 画面高さに対して適度な大きさを確保しつつ、はみ出さないように */
-                height: 90dvh;
-                max-height: 1000px; /* 大きくなりすぎないように */
-                min-height: 600px; /* 小さくなりすぎないように */
+                width: 450px;
+                height: 850px;
                 
-                width: auto;
-                max-width: 90vw; /* 横幅も画面内に収める */
+                /* アスペクト比指定は削除し、px指定を優先 */
                 
-                box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-                border-radius: 24px; /* 角丸復活 */
-                border: 1px solid rgba(0,0,0,0.05);
+                /* はみ出し防止（念のため） */
+                max-width: 100vw;
+                max-height: 100vh;
+                
+                box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+                
+                /* 修正: 角丸を16pxに変更 */
+                border-radius: 16px;
+                border: 1px solid rgba(0,0,0,0.1);
             }
         }
 
@@ -265,7 +269,6 @@
             display: flex;
             flex-direction: column;
             gap: 16px;
-            /* スクロールしなくてもいいように高さを確保しつつ、必要な場合のみスクロール */
             max-height: 70%;
             overflow-y: auto;
             border-top: 1px solid var(--border-color);
@@ -287,7 +290,7 @@
             border: 1px solid var(--input-border);
             border-radius: 10px;
             padding: 12px;
-            font-size: 16px; /* Fixed size */
+            font-size: 16px;
             color: var(--text-color);
             text-align: center;
             outline: none;
@@ -318,7 +321,7 @@
             border-radius: 10px;
             padding: 12px;
             padding-right: 36px;
-            font-size: 15px; /* Fixed size */
+            font-size: 15px;
             appearance: none;
             -webkit-appearance: none;
             outline: none;
@@ -365,13 +368,16 @@
         }
         input[type="checkbox"]:checked + .checkbox-custom i { transform: scale(1); }
 
-        /* Presets (修正: 折り返し表示) */
+        /* Presets */
         .presets-container {
             display: flex; 
             gap: 10px; 
-            /* overflow-x: auto;  <- これを削除 */
-            flex-wrap: wrap; /* 折り返しを有効化 */
+            flex-wrap: wrap;
             justify-content: space-between;
+            /* 修正: パディングを増やして枠切れを防止 */
+            padding: 4px;
+            margin: 0 -4px; /* パディング分をネガティブマージンで相殺 */
+            width: calc(100% + 8px);
         }
         
         .preset-btn {
@@ -385,8 +391,9 @@
             white-space: nowrap;
             cursor: pointer;
             transition: all 0.2s;
-            flex: 1 1 20%; /* 幅を調整して均等に並べる */
+            flex: 1 1 20%;
             text-align: center;
+            position: relative; /* z-index用 */
         }
         .preset-btn.disabled { opacity: 0.3; pointer-events: none; border-style: dashed; }
         .preset-btn.active { 
@@ -394,6 +401,8 @@
             background: var(--bg-color);
             font-weight: 700;
             transform: translateY(-1px);
+            z-index: 1; /* 重なり順を上げる */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* 少し影をつけて浮かす */
         }
         .preset-btn:active { transform: scale(0.96); }
 
@@ -613,6 +622,21 @@
     const modal = document.getElementById('imageModal');
     const modalImage = document.getElementById('modalImage');
     const closeModal = document.getElementById('closeModal');
+
+    // --- Disable Zoom (PC/Shortcuts) ---
+    // Note: This attempts to prevent zooming via keyboard shortcuts.
+    // Browser menu zooming cannot be prevented via JS.
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '-' || e.key === '=')) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    document.addEventListener('wheel', function(e) {
+        if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+        }
+    }, { passive: false });
 
     // --- State ---
     let originalImage = null;
