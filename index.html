@@ -5,12 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Resizer</title>
     
-    <!-- PWA Settings -->
+    <!-- PWA Settings (iOS) -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Resizer">
     <link rel="apple-touch-icon" href="icon_512x512.jpg">
     <link rel="icon" href="icon_512x512.jpg">
+
+    <!-- PWA Settings (Android/Manifest) -->
+    <!-- Embedded manifest.json to support Android PWA installation -->
+    <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoiUmVzaXplciIsInNob3J0X25hbWUiOiJSZXNpemVyIiwic3RhcnRfdXJsIjoiLiIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiNmZmZmZmYiLCJ0aGVtZV9jb2xvciI6IiNmZmZmZmYiLCJpY29ucyI6W3sic3JjIjoiaWNvbl81MTJ4NTEyLmpwZyIsInNpemVzIjoiNTEyeDUxMiIsInR5cGUiOiJpbWFnZS9qcGVnIn1dfQ==">
 
     <!-- Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
@@ -68,7 +72,7 @@
             height: 100vh;
             height: 100dvh;
             overflow: hidden;
-            /* Default for mobile: Flex for transitions if needed */
+            /* Default Layout */
             display: flex;
             flex-direction: column;
             transition: background-color var(--transition-speed) ease;
@@ -87,29 +91,29 @@
         }
 
         /* PC/Tablet Specific Styles */
-        @media (min-width: 481px) {
+        @media (min-width: 541px) {
             body {
-                /* Allow body scroll when window is too short */
-                display: block;
-                overflow-y: auto;
                 background-color: var(--pc-body-bg);
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
 
             #app-frame {
-                max-width: 430px; /* Mobile Width */
+                /* Bigger Mobile View */
+                width: 100%;
+                max-width: 540px; /* Wider than typical phone for better visibility */
                 
-                /* Fill Height & Remove Margins */
-                height: 100dvh; 
-                margin: 0 auto; /* Center Horizontally */
+                /* Height with margins */
+                height: 92vh; /* Use 92% of screen height */
+                min-height: 700px; /* Ensure content fits */
+                max-height: 1100px;
                 
-                /* Minimum height to prevent crushing UI */
-                min-height: 680px; 
+                /* Shadow to pop out */
+                box-shadow: 0 10px 50px rgba(0,0,0,0.2);
 
-                /* Remove Border Radius (Sharp Corners) */
-                border-radius: 0;
-                
-                /* Shadow for separation */
-                box-shadow: 0 0 40px rgba(0,0,0,0.15);
+                /* No Rounded Corners as requested */
+                border-radius: 0; 
             }
         }
 
