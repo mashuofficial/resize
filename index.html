@@ -64,18 +64,15 @@
             padding: 0;
             height: 100vh;
             height: 100dvh;
-            overflow: hidden; /* Prevent body scroll entirely */
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             transition: background-color var(--transition-speed) ease;
-            
-            /* Prevent text size adjustment */
             text-size-adjust: 100%;
             -webkit-text-size-adjust: 100%;
             -moz-text-size-adjust: 100%;
         }
 
-        /* --- Main Layout --- */
         #app-frame {
             width: 100%;
             height: 100%;
@@ -143,7 +140,7 @@
 
         .upload-area {
             width: 100%;
-            max-width: 400px; /* Max width for upload box */
+            max-width: 400px;
             border: 2px dashed var(--border-color);
             border-radius: 20px;
             padding: 60px 20px;
@@ -214,7 +211,7 @@
             letter-spacing: 0.5px;
         }
 
-        /* Controls Sheet (Bottom Panel) */
+        /* Controls Sheet */
         .controls-sheet {
             flex: 0 0 auto;
             background: var(--sheet-bg);
@@ -227,22 +224,18 @@
             display: flex;
             flex-direction: column;
             gap: 16px;
-            
-            /* Ensure controls are accessible */
             max-height: 60vh;
             overflow-y: auto;
             border-top: 1px solid var(--border-color);
             
-            /* Tablet/Desktop Optimization */
             width: 100%;
-            max-width: 600px; /* Don't stretch too wide on tablets */
-            margin: 0 auto; /* Center it */
+            max-width: 600px;
+            margin: 0 auto;
         }
         
-        /* On larger screens, center the controls sheet nicely */
         @media (min-width: 600px) {
             .controls-sheet {
-                border-radius: 24px 24px 0 0; /* Reset side borders */
+                border-radius: 24px 24px 0 0;
                 border-left: 1px solid var(--border-color);
                 border-right: 1px solid var(--border-color);
             }
@@ -338,6 +331,38 @@
             border-color: var(--accent-color);
         }
         input[type="checkbox"]:checked + .checkbox-custom i { transform: scale(1); }
+
+        /* Segmented Control (Preset Mode) */
+        .preset-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .segmented-control {
+            display: flex;
+            background: var(--input-bg);
+            border-radius: 8px;
+            padding: 2px;
+            gap: 2px;
+        }
+        .segmented-control input[type="radio"] {
+            display: none;
+        }
+        .segmented-control label {
+            padding: 4px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--secondary-text);
+            transition: all 0.2s;
+        }
+        .segmented-control input[type="radio"]:checked + label {
+            background: var(--bg-color);
+            color: var(--text-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-weight: 600;
+        }
 
         /* Presets */
         .presets-container {
@@ -511,9 +536,19 @@
                     <span>縦横比を維持</span>
                 </label>
 
-                <!-- Presets -->
+                <!-- Presets with Segmented Control -->
                 <div>
-                    <label class="label">プリセット (横幅)</label>
+                    <div class="preset-header">
+                        <label class="label" style="margin:0;">プリセット</label>
+                        <div class="segmented-control">
+                            <input type="radio" name="preset-mode" id="modeWidth" value="width" checked>
+                            <label for="modeWidth">横幅</label>
+                            
+                            <input type="radio" name="preset-mode" id="modeHeight" value="height">
+                            <label for="modeHeight">縦幅</label>
+                        </div>
+                    </div>
+                    
                     <div class="presets-container" id="presetContainer">
                         <button class="preset-btn" data-w="320">320px</button>
                         <button class="preset-btn" data-w="640">640px</button>
@@ -577,6 +612,7 @@
     const aspectRatioCheck = document.getElementById('aspectRatioCheck');
     const presetBtns = document.querySelectorAll('.preset-btn');
     const formatSelect = document.getElementById('formatSelect');
+    const presetModeInputs = document.querySelectorAll('input[name="preset-mode"]');
     
     const convertBtn = document.getElementById('convertBtn');
     const btnSpinner = document.getElementById('btnSpinner');
@@ -610,6 +646,7 @@
     let originalFile = null;
     let originalSizeStr = "";
     let aspectRatio = 0;
+    let presetMode = 'width'; // 'width' or 'height'
 
     // --- Device Detection ---
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -772,32 +809,51 @@
         }
 
         convertBtn.disabled = hasError || w <= 0 || h <= 0;
-        updateActivePreset(w);
+        updateActivePreset(presetMode === 'width' ? w : h);
         updateEstimate(hasError);
     }
 
+    // --- Preset Logic ---
+    presetModeInputs.forEach(input => {
+        input.addEventListener('change', (e) => {
+            presetMode = e.target.value;
+            updatePresetsState();
+            // Optional: Re-validate active state
+            const currentVal = presetMode === 'width' ? parseInt(widthInput.value) : parseInt(heightInput.value);
+            updateActivePreset(currentVal);
+        });
+    });
+
     presetBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            const targetW = parseInt(btn.dataset.w);
+            const targetVal = parseInt(btn.dataset.w);
             if (!aspectRatioCheck.checked) aspectRatioCheck.checked = true;
-            widthInput.value = targetW;
-            heightInput.value = Math.round(targetW / aspectRatio);
+
+            if (presetMode === 'width') {
+                widthInput.value = targetVal;
+                heightInput.value = Math.round(targetVal / aspectRatio);
+            } else {
+                heightInput.value = targetVal;
+                widthInput.value = Math.round(targetVal * aspectRatio);
+            }
             validate();
         });
     });
 
-    function updateActivePreset(currentW) {
+    function updateActivePreset(currentVal) {
         presetBtns.forEach(btn => {
-            const w = parseInt(btn.dataset.w);
-            if (w === currentW) btn.classList.add('active');
+            const val = parseInt(btn.dataset.w);
+            if (val === currentVal) btn.classList.add('active');
             else btn.classList.remove('active');
         });
     }
 
     function updatePresetsState() {
         presetBtns.forEach(btn => {
-            const targetW = parseInt(btn.dataset.w);
-            if (targetW > originalW) btn.classList.add('disabled');
+            const val = parseInt(btn.dataset.w);
+            let limit = (presetMode === 'width') ? originalW : originalH;
+            
+            if (val > limit) btn.classList.add('disabled');
             else btn.classList.remove('disabled');
         });
     }
