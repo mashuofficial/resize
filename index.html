@@ -36,7 +36,7 @@
             --bezier: cubic-bezier(0.25, 1, 0.5, 1);
             
             /* Body Background for PC View */
-            --pc-body-bg: #F0F0F0;
+            --pc-body-bg: #EFEFF4;
         }
 
         [data-theme="dark"] {
@@ -61,20 +61,20 @@
         
         body {
             font-family: var(--font-stack);
-            background-color: var(--pc-body-bg); /* PC background */
+            background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
             padding: 0;
             height: 100vh;
             height: 100dvh;
             overflow: hidden;
+            /* Default for mobile: Flex for transitions if needed */
             display: flex;
-            justify-content: center;
-            align-items: center;
+            flex-direction: column;
             transition: background-color var(--transition-speed) ease;
         }
 
-        /* --- App Frame (Mobile Wrapper) --- */
+        /* --- App Frame (Wrapper) --- */
         #app-frame {
             width: 100%;
             height: 100%;
@@ -88,17 +88,28 @@
 
         /* PC/Tablet Specific Styles */
         @media (min-width: 481px) {
-            #app-frame {
-                max-width: 420px; /* Mobile width */
-                max-height: 920px; /* Prevent too tall on large screens */
-                height: 100%;
-                /* Optional: Add border radius or shadow to look like a phone */
-                box-shadow: 0 20px 40px rgba(0,0,0,0.2); 
-            }
-            
-            /* Center vertically if height is constrained */
             body {
-                height: 100vh;
+                /* Allow body scroll when window is too short */
+                display: block;
+                overflow-y: auto;
+                background-color: var(--pc-body-bg);
+            }
+
+            #app-frame {
+                max-width: 430px; /* Mobile Width */
+                
+                /* Fill Height & Remove Margins */
+                height: 100dvh; 
+                margin: 0 auto; /* Center Horizontally */
+                
+                /* Minimum height to prevent crushing UI */
+                min-height: 680px; 
+
+                /* Remove Border Radius (Sharp Corners) */
+                border-radius: 0;
+                
+                /* Shadow for separation */
+                box-shadow: 0 0 40px rgba(0,0,0,0.15);
             }
         }
 
@@ -159,7 +170,7 @@
 
         .upload-area {
             width: 100%;
-            max-width: 100%; /* Fill container */
+            max-width: 100%;
             border: 2px dashed var(--border-color);
             border-radius: 20px;
             padding: 60px 20px;
@@ -412,7 +423,7 @@
             font-weight: 500;
         }
 
-        /* Modal - Now positioned absolute within app-frame */
+        /* Modal */
         .modal {
             position: absolute; inset: 0;
             background: rgba(0,0,0,0.95);
@@ -445,11 +456,8 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Toast - Now positioned absolute within app-frame */
         .toast {
             position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
-            /* Override top/bottom depending on design, here bottom is safer for absolute inside rel */
-            top: auto; 
             background: rgba(30, 30, 30, 0.9); color: white;
             padding: 10px 20px; border-radius: 20px; font-size: 13px;
             opacity: 0; pointer-events: none; transition: opacity 0.3s;
